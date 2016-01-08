@@ -1,3 +1,0 @@
-RAS/kEpsilonPANS/kEpsilonPANS.C
-
-LIB = $(FOAM_USER_LIBBIN)/libmyturbulenceModels
