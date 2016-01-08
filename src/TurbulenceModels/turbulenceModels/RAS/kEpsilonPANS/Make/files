@@ -1,0 +1,3 @@
+makeTurbulenceModel.C
+
+LIB = $(FOAM_USER_LIBIN)/libMyRASModels

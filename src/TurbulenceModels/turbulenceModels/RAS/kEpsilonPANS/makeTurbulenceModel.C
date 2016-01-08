@@ -1,22 +1,24 @@
-//#include "IncompressibleTurbulenceModel.H"
-//#include "incompressible/transportModel/transportModel.H"
+#include "TurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
 #include "makeTurbulenceModel.H"
+#include "eddyViscosity.H"
+#include "linearViscousStress.H"
+#include "RASModel.H"
+#include "autoPtr.H"
 
-//#include "RASModel.H"
-
-// namespace Foam
-// {
-//     typedef IncompressibleTurbulenceModel<transportModel> 
-//         transportModelIncompressibleTurbulenceModel;
-//     typedef RASModel<transportModelIncompressibleTurbulenceModel>
-//         RAStransportModelIncompressibleTurbulenceModel;
-// }
+/*namespace Foam
+{
+    typedef BasicTurbulenceModel<transportModel> 
+        transportModelBasicTurbulenceModel;
+    typedef RASModel<transportModelBasicTurbulenceModel>
+        RAStransportModelBasicTurbulenceModel;
+}*/
 
 #include "kEpsilonPANS.H"
+
 makeTemplatedTurbulenceModel
 (
-    RASModel,
+    turbulenceModel,
     RAS,
     kEpsilonPANS
 );
