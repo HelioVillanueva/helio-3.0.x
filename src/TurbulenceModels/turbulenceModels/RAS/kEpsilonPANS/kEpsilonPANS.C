@@ -35,12 +35,7 @@ namespace RASModels
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-/*    // Re-calculate viscosity
-    this->nut_ = Cmi_*sqr(kU_)/epsilonU_;
-
-    //Change the Cmu_ to Cmi_
-    this->nut_.correctBoundaryConditions();
-
+/*
 template<class BasicTurbulenceModel>
 void kEpsilonPANS<BasicTurbulenceModel>::correctNut()
 {
