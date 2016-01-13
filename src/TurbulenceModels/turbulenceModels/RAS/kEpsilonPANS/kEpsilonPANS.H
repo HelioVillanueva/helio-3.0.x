@@ -50,7 +50,7 @@ Description
 
     The default model coefficients are
     \verbatim
-        kEpsilonCoeffs
+        kEpsilonPANSCoeffs
         {
             Cmu         0.09;
             C1          1.44;
@@ -62,7 +62,7 @@ Description
     \endverbatim
 
 SourceFiles
-    kEpsilon.C
+    kEpsilonPANS.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -80,7 +80,7 @@ namespace RASModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class kEpsilon Declaration
+                           Class kEpsilonPANS Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class BasicTurbulenceModel>
@@ -101,26 +101,18 @@ protected:
 
         // Model coefficients
 
-            dimensionedScalar Cmi_;
             dimensionedScalar Cmu_;
             dimensionedScalar C1_;
             dimensionedScalar C2_;
             dimensionedScalar C3_;
             dimensionedScalar sigmak_;
             dimensionedScalar sigmaEps_;
-            dimensionedScalar fEpsilon_;
 
         // Fields
-
-            volScalarField cellVolume;
-            volScalarField fK_;
-            volScalarField C2U_;
 
             volScalarField k_;
             volScalarField epsilon_;
 
-            volScalarField kU_;
-            volScalarField epsilonU_;
 
     // Protected Member Functions
 
@@ -188,32 +180,6 @@ public:
                 (
                     "DepsilonEff",
                     (this->nut_/sigmaEps_ + this->nu())
-                )
-            );
-        }
-
-        //- Return the effective diffusivity for unresolved k
-        tmp<volScalarField> DkUEff() const
-        {
-            return tmp<volScalarField>
-            (
-                new volScalarField
-                (
-                    "DkUEff",
-                    (this->nut_/(fK_*fK_/fEpsilon_) + this->nu())
-                )
-            );
-        }
-
-        //- Return the effective diffusivity for unresolved epsilon
-        tmp<volScalarField> DepsilonUEff() const
-        {
-            return tmp<volScalarField>
-            (
-                new volScalarField
-                (
-                    "DepsilonUEff",
-                    (this->nut_/(fK_*fK_*sigmaEps_/fEpsilon_) + this->nu())
                 )
             );
         }
