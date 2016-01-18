@@ -225,10 +225,22 @@ public:
             return k_;
         }
 
+        //- Return the turbulence kinetic energy
+        virtual tmp<volScalarField> kU() const
+        {
+            return kU_;
+        }
+
         //- Return the turbulence kinetic energy dissipation rate
         virtual tmp<volScalarField> epsilon() const
         {
             return epsilon_;
+        }
+
+        //- Return the turbulence kinetic energy dissipation rate
+        virtual tmp<volScalarField> epsilonU() const
+        {
+            return epsilonU_;
         }
 
         //- Solve the turbulence equations and correct the turbulence viscosity

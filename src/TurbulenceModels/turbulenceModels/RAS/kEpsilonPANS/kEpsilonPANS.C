@@ -38,7 +38,7 @@ namespace RASModels
 template<class BasicTurbulenceModel>
 void kEpsilonPANS<BasicTurbulenceModel>::correctNut()
 {
-    this->nut_ = Cmi_*sqr(k_)/epsilon_; // PANS - Cmu to Cmi
+    this->nut_ = Cmu_*sqr(kU_)/epsilonU_; // PANS - Cmu to Cmi
     this->nut_.correctBoundaryConditions();
 
     BasicTurbulenceModel::correctNut();
@@ -52,8 +52,8 @@ tmp<fvScalarMatrix> kEpsilonPANS<BasicTurbulenceModel>::kSource() const
     (
         new fvScalarMatrix
         (
-            k_,
-            dimVolume*this->rho_.dimensions()*k_.dimensions()
+            kU_,
+            dimVolume*this->rho_.dimensions()*kU_.dimensions()
             /dimTime
         )
     );
@@ -67,8 +67,8 @@ tmp<fvScalarMatrix> kEpsilonPANS<BasicTurbulenceModel>::epsilonSource() const
     (
         new fvScalarMatrix
         (
-            epsilon_,
-            dimVolume*this->rho_.dimensions()*epsilon_.dimensions()
+            epsilonU_,
+            dimVolume*this->rho_.dimensions()*epsilonU_.dimensions()
             /dimTime
         )
     );
@@ -108,7 +108,7 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
         (
             "Cmi",
             this->coeffDict_,
-            0.22
+            0.09 //0.22
         )
     ),
     Cmu_
@@ -199,7 +199,7 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             IOobject::AUTO_WRITE
         ),
         this->mesh_,
-        dimensionedScalar("zeroOne", 0.1)
+        dimensionedScalar("zero", 0.1)
     ),
     C2U
     (
@@ -214,7 +214,6 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
         this->mesh_,
         dimensionedScalar("zero", 0.0)
     ),
-
 
     k_
     (
@@ -251,8 +250,9 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_,
-        dimensionedScalar("zero", 0.0)
+        k_*fK_
+        //this->mesh_,
+        //dimensionedScalar("kU", dimensionSet(0,2,-2,0,0,0,0), 0.0)
     ),
     epsilonU_
     (
@@ -264,12 +264,11 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_,
-        dimensionedScalar("zero", 0.0)
+        epsilon_*fEpsilon_ 
     )
 
 {
-    
+    //Initialize variables cellVolume and C2U
     cellVolume.internalField() = this->mesh_.V();
     C2U = C1_ + (fK_/fEpsilon_)*(C2_ - C1_);
 
@@ -298,6 +297,7 @@ bool kEpsilonPANS<BasicTurbulenceModel>::read()
         C3_.readIfPresent(this->coeffDict());
         sigmak_.readIfPresent(this->coeffDict());
         sigmaEps_.readIfPresent(this->coeffDict());
+        fK_.readIfPresent(this->coeffDict());
         fEpsilon_.readIfPresent(this->coeffDict());
 
         return true;
@@ -334,6 +334,7 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
 
     // Update epsilon and G at the wall
     epsilon_.boundaryField().updateCoeffs();
+    //epsilonU_.boundaryField().updateCoeffs();
 
     // Dissipation equation for unresolved
     tmp<fvScalarMatrix> epsEqn
@@ -342,16 +343,18 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
       + fvm::div(alphaRhoPhi, epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonUEff(), epsilon_)
      ==
-        C1_*alpha*rho*G*epsilon_/k_
+        C1_*alpha*rho*G*epsilonU_/kU_
       - fvm::SuSp(((2.0/3.0)*C1_ + C3_)*alpha*rho*divU, epsilon_)
-      - fvm::Sp(C2_*alpha*rho*epsilon_/k_, epsilon_)
-      + epsilonSource()
+      - fvm::Sp(C2U*alpha*rho*epsilonU_/kU_, epsilon_)
+      //+ epsilonSource()
     );
 
     epsEqn().relax();
-    epsEqn().boundaryManipulate(epsilon_.boundaryField());
+    epsEqn().boundaryManipulate(epsilonU_.boundaryField());
     solve(epsEqn);
     bound(epsilon_, fEpsilon_*this->epsilonMin_);
+
+
 
     // Turbulent kinetic energy equation
     tmp<fvScalarMatrix> kEqn
@@ -362,17 +365,19 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
      ==
         alpha*rho*G
       - fvm::SuSp((2.0/3.0)*alpha*rho*divU, k_)
-      - fvm::Sp(alpha*rho*epsilon_/k_, k_)
-      + kSource()
+      - fvm::Sp(alpha*rho*epsilonU_/kU_, k_)
+      //+ kSource()
     );
 
     kEqn().relax();
     solve(kEqn);
-    bound(k_, this->kMin_);
+    bound(k_, min(fK_)*this->kMin_);
 
     // Calculation of Turbulent kinetic energy and Dissipation rate
     //k_ = kU_/fK_;
     //epsilon_ = epsilonU_/fEpsilon_;
+    kU_=k_*fK_;
+    epsilonU_=epsilon_*fEpsilon_;
 
     correctNut();
 
@@ -380,8 +385,8 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
     // Calculation of fK - switch from DNS to RANS
     for (int i=0; i<fK_.size(); i++)
     {
-        fK_[i]=(1/sqrt(Cmi_.value()))*(pow(pow(cellVolume[i],1.0/3.0)/
-            (pow(k_[i],3.0/2.0)/epsilon_[i]),2.0/3.0));
+        fK_[i]=(1/sqrt(Cmu_.value()))*(pow(pow(cellVolume[i],1.0/3.0)/
+            (pow(kU_[i],3.0/2.0)/epsilonU_[i]),2.0/3.0));
         
         if (fK_[i]>1)       // upper limit - RANS
             fK_[i] = 1;
