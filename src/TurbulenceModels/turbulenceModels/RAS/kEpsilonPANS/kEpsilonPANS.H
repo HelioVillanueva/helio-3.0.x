@@ -31,12 +31,15 @@ Description
     PANS implementation based on the Standard k-epsilon turbulence model for 
     incompressible and compressible flows including rapid distortion theory 
     (RDT) based compression term. The fK parameter, responsible for switching 
-    from RAS to DNS is calculated for each cell [i] as:
+    from RAS to DNS is calculated as:
 
-    fK_[i]=(1/sqrt(Cmu_.value()))*(pow(pow(cellVolume[i],1.0/3.0)/
-            (pow(kU_[i],3.0/2.0)/epsilonU_[i]),2.0/3.0)),
+    fK_ = min( max( (1/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
+               (pow(kU_,3.0/2.0)/epsilonU_),2.0/3.0)) , (kU_/kU_)*loLim_ ), 
+                (kU_/kU_)*uLim_ );
 
-    bounded between 0.1 (DNS) to 1 (RAS).
+    bounded between loLim (DNS -> 0.0) and uLim (RAS -> 1.0). Lower the uLim,
+    defined in turbulenceProperties dict, more scales are resolved.
+
 
     Reference:
     \verbatim
@@ -80,6 +83,8 @@ Description
             sigmak      1.0;
             sigmaEps    1.3;
             fEpsilon    1.0;
+            upperLimit  1.0;
+            lowerLimit  0.1;
         }
     \endverbatim
 
@@ -139,8 +144,8 @@ protected:
             volScalarField fK_;
             volScalarField C2U;
             volScalarField k_;
-            volScalarField epsilon_;
             volScalarField kU_;
+            volScalarField epsilon_;
             volScalarField epsilonU_;
 
 
@@ -189,19 +194,6 @@ public:
         //- Re-read model coefficients if they have changed
         virtual bool read();
 
-        //- Return the effective diffusivity for k
-        /*tmp<volScalarField> DkEff() const
-        {
-            return tmp<volScalarField>
-            (
-                new volScalarField
-                (
-                    "DkEff",
-                    (this->nut_/sigmak_ + this->nu())
-                )
-            );
-        }*/
-
         //- Return the effective diffusivity for unresolved k
         tmp<volScalarField> DkUEff() const
         {
@@ -215,19 +207,6 @@ public:
                 )
             );
         }
-
-        //- Return the effective diffusivity for epsilon
-        /*tmp<volScalarField> DepsilonEff() const
-        {
-            return tmp<volScalarField>
-            (
-                new volScalarField
-                (
-                    "DepsilonEff",
-                    (this->nut_/sigmaEps_ + this->nu())
-                )
-            );
-        }*/
 
         //- Return the effective diffusivity for unresolved epsilon
         tmp<volScalarField> DepsilonUEff() const
@@ -249,22 +228,10 @@ public:
             return k_;
         }
 
-        //- Return the unresolved turbulence kinetic energy
-        virtual tmp<volScalarField> kU() const
-        {
-            return kU_;
-        }
-
         //- Return the turbulence kinetic energy dissipation rate
         virtual tmp<volScalarField> epsilon() const
         {
             return epsilon_;
-        }
-
-        //- Return the unresolved turbulence kinetic energy dissipation rate
-        virtual tmp<volScalarField> epsilonU() const
-        {
-            return epsilonU_;
         }
 
         //- Solve the turbulence equations and correct the turbulence viscosity
