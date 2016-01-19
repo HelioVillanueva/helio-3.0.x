@@ -28,8 +28,15 @@ Group
     grpRASTurbulence
 
 Description
-    Standard k-epsilon turbulence model for incompressible and compressible
-    flows including rapid distortion theory (RDT) based compression term.
+    PANS implementation based on the Standard k-epsilon turbulence model for 
+    incompressible and compressible flows including rapid distortion theory 
+    (RDT) based compression term. The fK parameter, responsible for switching 
+    from RAS to DNS is calculated for each cell [i] as:
+
+    fK_[i]=(1/sqrt(Cmu_.value()))*(pow(pow(cellVolume[i],1.0/3.0)/
+            (pow(kU_[i],3.0/2.0)/epsilonU_[i]),2.0/3.0)),
+
+    bounded between 0.1 (DNS) to 1 (RAS).
 
     Reference:
     \verbatim
@@ -46,6 +53,20 @@ Description
             El Tahry, S. H. (1983).
             k-epsilon equation for compressible reciprocating engine flows.
             Journal of Energy, 7(4), 345-353.
+
+        PANS:
+            Girimaji, S. S. (2006).
+            Partially-averaged Navier-Stokes method for turbulence: A Reynolds
+            averaged Navier-Stokes to direct numerical simulation bridging
+            method.
+            Journal of Applied Mechanics, Vol 73, 413-421.
+
+            Girimaji, S. & Jeong, E. & Srinivasan, R. (2006).
+            Partially-averaged Navier-Stokes method for turbulence: Fixed point
+            analysis and comparison with unsteady partially averaged 
+            Navier-Stokes.
+            Journal of Applied Mechanics, Vol 73, 422-429.
+
     \endverbatim
 
     The default model coefficients are
@@ -58,6 +79,7 @@ Description
             C3          -0.33;
             sigmak      1.0;
             sigmaEps    1.3;
+            fEpsilon    1.0;
         }
     \endverbatim
 
@@ -101,7 +123,6 @@ protected:
 
         // Model coefficients
 
-            dimensionedScalar Cmi_;
             dimensionedScalar Cmu_;
             dimensionedScalar C1_;
             dimensionedScalar C2_;
@@ -109,6 +130,8 @@ protected:
             dimensionedScalar sigmak_;
             dimensionedScalar sigmaEps_;
             dimensionedScalar fEpsilon_;
+            dimensionedScalar uLim_;
+            dimensionedScalar loLim_;
 
         // Fields
 
@@ -124,6 +147,7 @@ protected:
     // Protected Member Functions
 
         virtual void correctNut();
+        virtual void correctPANSCoeffs();
         virtual tmp<fvScalarMatrix> kSource() const;
         virtual tmp<fvScalarMatrix> epsilonSource() const;
 
@@ -166,7 +190,7 @@ public:
         virtual bool read();
 
         //- Return the effective diffusivity for k
-        tmp<volScalarField> DkEff() const
+        /*tmp<volScalarField> DkEff() const
         {
             return tmp<volScalarField>
             (
@@ -176,7 +200,7 @@ public:
                     (this->nut_/sigmak_ + this->nu())
                 )
             );
-        }
+        }*/
 
         //- Return the effective diffusivity for unresolved k
         tmp<volScalarField> DkUEff() const
@@ -193,7 +217,7 @@ public:
         }
 
         //- Return the effective diffusivity for epsilon
-        tmp<volScalarField> DepsilonEff() const
+        /*tmp<volScalarField> DepsilonEff() const
         {
             return tmp<volScalarField>
             (
@@ -203,7 +227,7 @@ public:
                     (this->nut_/sigmaEps_ + this->nu())
                 )
             );
-        }
+        }*/
 
         //- Return the effective diffusivity for unresolved epsilon
         tmp<volScalarField> DepsilonUEff() const
@@ -225,7 +249,7 @@ public:
             return k_;
         }
 
-        //- Return the turbulence kinetic energy
+        //- Return the unresolved turbulence kinetic energy
         virtual tmp<volScalarField> kU() const
         {
             return kU_;
@@ -237,7 +261,7 @@ public:
             return epsilon_;
         }
 
-        //- Return the turbulence kinetic energy dissipation rate
+        //- Return the unresolved turbulence kinetic energy dissipation rate
         virtual tmp<volScalarField> epsilonU() const
         {
             return epsilonU_;
