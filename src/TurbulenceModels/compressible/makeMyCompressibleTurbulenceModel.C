@@ -78,6 +78,9 @@ makeRASModel(kEpsilonPANS);
 #include "kOmegaSSTSASnew.H"
 makeRASModel(kOmegaSSTSASnew);
 
+#include "kOmegaSSTPANS.H"
+makeRASModel(kOmegaSSTPANS);
+
 // -------------------------------------------------------------------------- //
 // LES models
 // -------------------------------------------------------------------------- //
