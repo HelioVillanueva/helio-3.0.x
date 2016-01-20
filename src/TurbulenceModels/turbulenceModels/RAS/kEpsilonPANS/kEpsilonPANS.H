@@ -31,14 +31,13 @@ Description
     PANS implementation based on the Standard k-epsilon turbulence model for 
     incompressible and compressible flows including rapid distortion theory 
     (RDT) based compression term. The fK parameter, responsible for switching 
-    from RAS to DNS is calculated as:
+    from RAS to DNS is calculated as [Girimaji,2005]:
 
     fK_ = min( max( (1/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
-               (pow(kU_,3.0/2.0)/epsilonU_),2.0/3.0)) , (kU_/kU_)*loLim_ ), 
-                (kU_/kU_)*uLim_ );
+               (pow(kU_,3.0/2.0)/epsilonU_),2.0/3.0)) , loLimVec ), uLimVec );
 
-    bounded between loLim (DNS -> 0.0) and uLim (RAS -> 1.0). Lower the uLim,
-    defined in turbulenceProperties dict, more scales are resolved.
+    bounded between loLim (DNS -> 0.0) and uLim (RAS -> 1.0). The ower the 
+    uLim, defined in turbulenceProperties dict, more scales are resolved.
 
 
     Reference:
@@ -58,6 +57,11 @@ Description
             Journal of Energy, 7(4), 345-353.
 
         PANS:
+            Girimaji, S. S. & Abdol-Hamid K. S. (2005).
+            Partially-averaged Navier-Stokes model for turbulence: 
+            Implementation and Validation.
+            43rd AIAA Aerospace Science Meeting and Exhibit.
+
             Girimaji, S. S. (2006).
             Partially-averaged Navier-Stokes method for turbulence: A Reynolds
             averaged Navier-Stokes to direct numerical simulation bridging
@@ -137,6 +141,8 @@ protected:
             dimensionedScalar fEpsilon_;
             dimensionedScalar uLim_;
             dimensionedScalar loLim_;
+            dimensionedScalar uLimVec;
+            dimensionedScalar loLimVec;
 
         // Fields
 
