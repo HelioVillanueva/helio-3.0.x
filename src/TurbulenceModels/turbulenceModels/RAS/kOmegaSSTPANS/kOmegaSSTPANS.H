@@ -75,6 +75,14 @@ Description
     uncertainty in their origin, range of applicability and that if y+ becomes
     sufficiently small blending u_tau in this manner clearly becomes nonsense.
 
+    The PANS implementation was based on paper
+    \verbatin
+        Luo, D.; Yan, C.; Liu, H. & Zhao, R. (2014).
+        Comparative assessment of PANS and DES for simulation of flow past a
+        circular cylinder.
+        Journal of wind engineering and industrial aerodynamics, Vol 134, 65-77
+    \endverbatim
+
     The default model coefficients are
     \verbatim
         kOmegaSSTPANSCoeffs
@@ -92,6 +100,9 @@ Description
             b1          1.0;
             c1          10.0;
             F3          no;
+            fOmega      1.0;
+            upperLimit  1.0;
+            lowerLimit  0.1;
         }
     \endverbatim
 
@@ -155,6 +166,13 @@ protected:
 
             Switch F3_;
 
+        // PANS coefficients
+            dimensionedScalar fOmega_;
+            dimensionedScalar uLim_;
+            dimensionedScalar loLim_;
+            dimensionedScalar uLimVec;
+            dimensionedScalar loLimVec;
+
 
         // Fields
 
@@ -163,8 +181,13 @@ protected:
             //  which is for near-wall cells only
             const volScalarField& y_;
 
+            volScalarField cellVolume;
+            volScalarField fK_;
             volScalarField k_;
+            volScalarField kU_;
             volScalarField omega_;
+            volScalarField omegaU_;
+
 
 
     // Private Member Functions

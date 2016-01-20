@@ -110,7 +110,7 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F23() co
 template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctNut(const volScalarField& S2)
 {
-    this->nut_ = a1_*k_/max(a1_*omega_, b1_*F23()*sqrt(S2));
+    this->nut_ = a1_*kU_/max(a1_*omegaU_, b1_*F23()*sqrt(S2));
     this->nut_.correctBoundaryConditions();
 
     BasicTurbulenceModel::correctNut();
@@ -133,8 +133,8 @@ tmp<fvScalarMatrix> kOmegaSSTPANS<BasicTurbulenceModel>::kSource() const
     (
         new fvScalarMatrix
         (
-            k_,
-            dimVolume*this->rho_.dimensions()*k_.dimensions()/dimTime
+            kU_,
+            dimVolume*this->rho_.dimensions()*kU_.dimensions()/dimTime
         )
     );
 }
@@ -147,8 +147,8 @@ tmp<fvScalarMatrix> kOmegaSSTPANS<BasicTurbulenceModel>::omegaSource() const
     (
         new fvScalarMatrix
         (
-            omega_,
-            dimVolume*this->rho_.dimensions()*omega_.dimensions()/dimTime
+            omegaU_,
+            dimVolume*this->rho_.dimensions()*omegaU_.dimensions()/dimTime
         )
     );
 }
@@ -166,8 +166,8 @@ tmp<fvScalarMatrix> kOmegaSSTPANS<BasicTurbulenceModel>::Qsas
     (
         new fvScalarMatrix
         (
-            omega_,
-            dimVolume*this->rho_.dimensions()*omega_.dimensions()/dimTime
+            omegaU_,
+            dimVolume*this->rho_.dimensions()*omegaU_.dimensions()/dimTime
         )
     );
 }
@@ -320,6 +320,66 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
 
     y_(wallDist::New(this->mesh_).y()),
 
+    fOmega_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "fOmega",
+            this->coeffDict_,
+            1.0
+        )
+    ),
+    uLim_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "upperLimit",
+            this->coeffDict_,
+            1.0
+        )
+    ),
+    loLim_
+    (
+        dimensioned<scalar>::lookupOrAddToDict
+        (
+            "lowerLimit",
+            this->coeffDict_,
+            0.1
+        )
+    ),
+    uLimVec
+    (
+        dimensionedScalar("uLimVec", uLim_)
+    ),
+    loLimVec
+    (
+        dimensionedScalar("loLimVec", loLim_)
+    ),
+    cellVolume
+    (
+        IOobject
+        (
+            "cellVolume",
+            this->runTime_.timeName(),
+            this->mesh_
+        ),
+        this->mesh_,
+        dimensionedScalar("zero", dimVolume, 0.0)
+    ),
+    fK_
+    (
+        IOobject
+        (
+            IOobject::groupName("fK", U.group()),
+            this->runTime_.timeName(),
+            this->mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        this->mesh_,
+        dimensionedScalar("zero", loLim_)
+    ),
+
     k_
     (
         IOobject
@@ -343,8 +403,37 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             IOobject::AUTO_WRITE
         ),
         this->mesh_
+    ),
+    kU_
+    (
+        IOobject
+        (
+            IOobject::groupName("kU", U.group()),
+            this->runTime_.timeName(),
+            this->mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        k_*fK_,
+        k_.boundaryField().types()
+    ),
+    omegaU_
+    (
+        IOobject
+        (
+            IOobject::groupName("omegaU", U.group()),
+            this->runTime_.timeName(),
+            this->mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        omega_*fOmega_,
+        omega_.boundaryField().types()
     )
 {
+    //Initialize variable cellVolume
+    cellVolume.internalField() = this->mesh_.V();
+
     bound(k_, this->kMin_);
     bound(omega_, this->omegaMin_);
 
@@ -376,6 +465,9 @@ bool kOmegaSSTPANS<BasicTurbulenceModel>::read()
         b1_.readIfPresent(this->coeffDict());
         c1_.readIfPresent(this->coeffDict());
         F3_.readIfPresent("F3", this->coeffDict());
+        fOmega_.readIfPresent(this->coeffDict());
+        uLim_.readIfPresent(this->coeffDict());
+        loLim_.readIfPresent(this->coeffDict());
 
         return true;
     }
@@ -412,11 +504,11 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     tgradU.clear();
 
     // Update omega and G at the wall
-    omega_.boundaryField().updateCoeffs();
+    omegaU_.boundaryField().updateCoeffs();
 
     volScalarField CDkOmega
     (
-        (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omega_))/omega_
+        (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omegaU_))/omegaU_
     );
 
     volScalarField F1(this->F1(CDkOmega));
@@ -425,54 +517,58 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
         volScalarField gamma(this->gamma(F1));
         volScalarField beta(this->beta(F1));
 
-        // Turbulent frequency equation
-        tmp<fvScalarMatrix> omegaEqn
+        // Unresolved Turbulent frequency equation
+        tmp<fvScalarMatrix> omegaUEqn
         (
-            fvm::ddt(alpha, rho, omega_)
-          + fvm::div(alphaRhoPhi, omega_)
-          - fvm::laplacian(alpha*rho*DomegaEff(F1), omega_)
+            fvm::ddt(alpha, rho, omegaU_)
+          + fvm::div(alphaRhoPhi, omegaU_)
+          - fvm::laplacian(alpha*rho*DomegaEff(F1), omegaU_)
          ==
             alpha*rho*gamma
            *min
             (
                 GbyNu,
-                (c1_/a1_)*betaStar_*omega_*max(a1_*omega_, b1_*F23()*sqrt(S2))
+                (c1_/a1_)*betaStar_*omegaU_*max(a1_*omegaU_, b1_*F23()*sqrt(S2))
             )
-          - fvm::SuSp((2.0/3.0)*alpha*rho*gamma*divU, omega_)
-          - fvm::Sp(alpha*rho*beta*omega_, omega_)
+          - fvm::SuSp((2.0/3.0)*alpha*rho*gamma*divU, omegaU_)
+          - fvm::Sp(alpha*rho*beta*omegaU_, omegaU_)
           - fvm::SuSp
             (
-                alpha*rho*(F1 - scalar(1))*CDkOmega/omega_,
-                omega_
+                alpha*rho*(F1 - scalar(1))*CDkOmega/omegaU_,
+                omegaU_
             )
           + Qsas(S2, gamma, beta)
           + omegaSource()
         );
 
-        omegaEqn().relax();
+        omegaUEqn().relax();
 
-        omegaEqn().boundaryManipulate(omega_.boundaryField());
+        omegaUEqn().boundaryManipulate(omegaU_.boundaryField());
 
-        solve(omegaEqn);
-        bound(omega_, this->omegaMin_);
+        solve(omegaUEqn);
+        bound(omegaU_, fOmega_*this->omegaMin_);
     }
 
     // Turbulent kinetic energy equation
-    tmp<fvScalarMatrix> kEqn
+    tmp<fvScalarMatrix> kUEqn
     (
-        fvm::ddt(alpha, rho, k_)
-      + fvm::div(alphaRhoPhi, k_)
-      - fvm::laplacian(alpha*rho*DkEff(F1), k_)
+        fvm::ddt(alpha, rho, kU_)
+      + fvm::div(alphaRhoPhi, kU_)
+      - fvm::laplacian(alpha*rho*DkEff(F1), kU_)
      ==
-        min(alpha*rho*G, (c1_*betaStar_)*alpha*rho*k_*omega_)
-      - fvm::SuSp((2.0/3.0)*alpha*rho*divU, k_)
-      - fvm::Sp(alpha*rho*betaStar_*omega_, k_)
+        min(alpha*rho*G, (c1_*betaStar_)*alpha*rho*kU_*omegaU_)
+      - fvm::SuSp((2.0/3.0)*alpha*rho*divU, kU_)
+      - fvm::Sp(alpha*rho*betaStar_*omegaU_, kU_)
       + kSource()
     );
 
-    kEqn().relax();
-    solve(kEqn);
-    bound(k_, this->kMin_);
+    kUEqn().relax();
+    solve(kUEqn);
+    bound(kU_, min(fK_)*this->kMin_);
+
+    // Calculation of Turbulent kinetic energy and Frequency
+    k_ = kU_/fK_;
+    omega_ = omegaU_/fOmega_;
 
     correctNut(S2);
 }
