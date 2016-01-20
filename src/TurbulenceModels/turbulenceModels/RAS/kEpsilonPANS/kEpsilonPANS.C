@@ -47,7 +47,7 @@ void kEpsilonPANS<BasicTurbulenceModel>::correctNut()
 template<class BasicTurbulenceModel>
 void kEpsilonPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {
-    fK_ = min( max( (1/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
+    fK_ = min( max( (1.0/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
                (pow(kU_,3.0/2.0)/epsilonU_),2.0/3.0)) , (kU_/kU_)*loLim_ ), 
                 (kU_/kU_)*uLim_ );
 
@@ -197,11 +197,9 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
     (
         IOobject
         (
-            IOobject::groupName("cellVolume", U.group()),
+            "cellVolume",
             this->runTime_.timeName(),
-            this->mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            this->mesh_
         ),
         this->mesh_,
         dimensionedScalar("zero", dimVolume, 0.0)
@@ -223,11 +221,9 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
     (
         IOobject
         (
-            IOobject::groupName("C2U", U.group()),
+            "C2U",
             this->runTime_.timeName(),
-            this->mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            this->mesh_
         ),
         C1_ + (fK_/fEpsilon_)*(C2_ - C1_)
     ),
