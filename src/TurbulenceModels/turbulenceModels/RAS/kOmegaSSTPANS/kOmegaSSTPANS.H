@@ -233,6 +233,7 @@ protected:
     // Protected Member Functions
 
         virtual void correctNut();
+        virtual void correctPANSCoeffs();
         virtual tmp<fvScalarMatrix> kSource() const;
         virtual tmp<fvScalarMatrix> omegaSource() const;
         virtual tmp<fvScalarMatrix> Qsas
@@ -280,24 +281,28 @@ public:
         //- Re-read model coefficients if they have changed
         virtual bool read();
 
-        //- Return the effective diffusivity for k
-        tmp<volScalarField> DkEff(const volScalarField& F1) const
-        {
-            return tmp<volScalarField>
-            (
-                new volScalarField("DkEff", alphaK(F1)*this->nut_ + this->nu())
-            );
-        }
-
-        //- Return the effective diffusivity for omega
-        tmp<volScalarField> DomegaEff(const volScalarField& F1) const
+        //- Return the effective diffusivity for unresolved k
+        tmp<volScalarField> DkUEff(const volScalarField& F1) const
         {
             return tmp<volScalarField>
             (
                 new volScalarField
                 (
-                    "DomegaEff",
-                    alphaOmega(F1)*this->nut_ + this->nu()
+                    "DkUEff",
+                    (fOmega_/fK_)*alphaK(F1)*this->nut_ + this->nu()
+                )
+            );
+        }
+
+        //- Return the effective diffusivity for unresolved omega
+        tmp<volScalarField> DomegaUEff(const volScalarField& F1) const
+        {
+            return tmp<volScalarField>
+            (
+                new volScalarField
+                (
+                    "DomegaUEff",
+                    (fOmega_/fK_)*alphaOmega(F1)*this->nut_ + this->nu()
                 )
             );
         }

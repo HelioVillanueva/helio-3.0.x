@@ -37,6 +37,22 @@ namespace RASModels
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 template<class BasicTurbulenceModel>
+void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
+{
+    fK_ = min
+    (
+        max
+        (
+            sqrt(betaStar_.value())*(pow(pow(cellVolume,1.0/3.0)/
+           (sqrt(k_)/(betaStar_.value()*omega_)),2.0/3.0)),
+            loLimVec
+        ),
+        uLimVec
+    );
+
+}
+
+template<class BasicTurbulenceModel>
 tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
 (
     const volScalarField& CDkOmega
@@ -54,10 +70,10 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
         (
             max
             (
-                (scalar(1)/betaStar_)*sqrt(k_)/(omega_*y_),
-                scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omega_)
+                (scalar(1)/betaStar_)*sqrt(kU_)/(omegaU_*y_),
+                scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omegaU_)
             ),
-            (4*alphaOmega2_)*k_/(CDkOmegaPlus*sqr(y_))
+            (4*alphaOmega2_)*kU_/(CDkOmegaPlus*sqr(y_))
         ),
         scalar(10)
     );
@@ -72,8 +88,8 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F2() con
     (
         max
         (
-            (scalar(2)/betaStar_)*sqrt(k_)/(omega_*y_),
-            scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omega_)
+            (scalar(2)/betaStar_)*sqrt(kU_)/(omegaU_*y_),
+            scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omegaU_)
         ),
         scalar(100)
     );
@@ -86,7 +102,7 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F3() con
 {
     tmp<volScalarField> arg3 = min
     (
-        150*(this->mu()/this->rho_)/(omega_*sqr(y_)),
+        150*(this->mu()/this->rho_)/(omegaU_*sqr(y_)),
         scalar(10)
     );
 
@@ -508,7 +524,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
 
     volScalarField CDkOmega
     (
-        (2*alphaOmega2_)*(fvc::grad(k_) & fvc::grad(omegaU_))/omegaU_
+        (2*alphaOmega2_)*(fvc::grad(kU_) & fvc::grad(omegaU_))/omegaU_
     );
 
     volScalarField F1(this->F1(CDkOmega));
@@ -522,7 +538,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
         (
             fvm::ddt(alpha, rho, omegaU_)
           + fvm::div(alphaRhoPhi, omegaU_)
-          - fvm::laplacian(alpha*rho*DomegaEff(F1), omegaU_)
+          - fvm::laplacian(alpha*rho*DomegaUEff(F1), omegaU_)
          ==
             alpha*rho*gamma
            *min
@@ -554,7 +570,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     (
         fvm::ddt(alpha, rho, kU_)
       + fvm::div(alphaRhoPhi, kU_)
-      - fvm::laplacian(alpha*rho*DkEff(F1), kU_)
+      - fvm::laplacian(alpha*rho*DkUEff(F1), kU_)
      ==
         min(alpha*rho*G, (c1_*betaStar_)*alpha*rho*kU_*omegaU_)
       - fvm::SuSp((2.0/3.0)*alpha*rho*divU, kU_)
@@ -571,6 +587,10 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     omega_ = omegaU_/fOmega_;
 
     correctNut(S2);
+
+    // Recalculate fK with new kU and epsilonU
+    correctPANSCoeffs();
+
 }
 
 
