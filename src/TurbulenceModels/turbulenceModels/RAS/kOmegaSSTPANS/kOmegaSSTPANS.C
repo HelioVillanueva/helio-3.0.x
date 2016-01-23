@@ -249,7 +249,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
         (
             "alphaOmega2",
             this->coeffDict_,
-            0.856
+            0.0828//0.856
         )
     ),
     gamma1_
@@ -532,6 +532,10 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     {
         volScalarField gamma(this->gamma(F1));
         volScalarField beta(this->beta(F1));
+        volScalarField betaL
+        (
+            gamma*betaStar_ - (gamma *betaStar_/fOmega_) +(beta/fOmega_)
+        );
 
         // Unresolved Turbulent frequency equation
         tmp<fvScalarMatrix> omegaUEqn
@@ -547,7 +551,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
                 (c1_/a1_)*betaStar_*omegaU_*max(a1_*omegaU_, b1_*F23()*sqrt(S2))
             )
           - fvm::SuSp((2.0/3.0)*alpha*rho*gamma*divU, omegaU_)
-          - fvm::Sp(alpha*rho*beta*omegaU_, omegaU_)
+          - fvm::Sp(alpha*rho*betaL*omegaU_, omegaU_)
           - fvm::SuSp
             (
                 alpha*rho*(F1 - scalar(1))*CDkOmega/omegaU_,
