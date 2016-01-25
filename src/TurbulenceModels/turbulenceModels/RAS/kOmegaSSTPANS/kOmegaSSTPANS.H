@@ -100,7 +100,7 @@ Description
             b1          1.0;
             c1          10.0;
             F3          no;
-            fOmega      1.0;
+            fEpsilon    1.0;
             upperLimit  1.0;
             lowerLimit  0.1;
         }
@@ -167,7 +167,7 @@ protected:
             Switch F3_;
 
         // PANS coefficients
-            dimensionedScalar fOmega_;
+            dimensionedScalar fEpsilon_;
             dimensionedScalar uLim_;
             dimensionedScalar loLim_;
             dimensionedScalar uLimVec;
@@ -183,6 +183,7 @@ protected:
 
             volScalarField cellVolume;
             volScalarField fK_;
+            volScalarField fOmega_;
             volScalarField k_;
             volScalarField kU_;
             volScalarField omega_;
