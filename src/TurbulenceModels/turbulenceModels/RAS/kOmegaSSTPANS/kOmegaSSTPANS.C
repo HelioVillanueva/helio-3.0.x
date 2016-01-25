@@ -128,7 +128,7 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F23() co
 template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctNut(const volScalarField& S2)
 {
-    this->nut_ = a1_*kU_/max(a1_*omegaU_, F23()*sqrt(S2));
+    this->nut_ = a1_*kU_/max(a1_*omegaU_, b1_*F23()*sqrt(S2));
     this->nut_.correctBoundaryConditions();
 
     BasicTurbulenceModel::correctNut();
@@ -469,7 +469,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
 
     if (type == typeName)
     {
-        //correctNut();
+        correctNut();
         this->printCoeffs(type);
     }
 }
@@ -549,7 +549,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
         volScalarField beta(this->beta(F1));
         volScalarField betaL
         (
-            (gamma*betaStar_ - (gamma *betaStar_/fOmega_) +(beta/fOmega_))
+            gamma*betaStar_ - (gamma *betaStar_/fOmega_) +(beta/fOmega_)
         );
 
 
@@ -565,7 +565,6 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
             (
                 GbyNu,
                 (c1_/a1_)*betaStar_*omegaU_*max(a1_*omegaU_, b1_*F23()*sqrt(S2))
-                //c1_*betaStar_*omegaU_*omegaU_
             )
           - fvm::SuSp((2.0/3.0)*alpha*rho*gamma*divU, omegaU_)
           - fvm::Sp(alpha*rho*betaL*omegaU_, omegaU_)
@@ -583,7 +582,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
         omegaUEqn().boundaryManipulate(omegaU_.boundaryField());
 
         solve(omegaUEqn);
-        bound(omegaU_, this->omegaMin_);
+        bound(omegaU_, min(fOmega_)*this->omegaMin_);
     }
 
     // Turbulent kinetic energy equation
