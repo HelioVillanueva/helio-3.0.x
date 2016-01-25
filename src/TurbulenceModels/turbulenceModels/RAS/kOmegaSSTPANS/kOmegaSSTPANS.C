@@ -351,7 +351,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     (
         dimensioned<scalar>::lookupOrAddToDict
         (
-            "upperLimit",
+            "fKupperLimit",
             this->coeffDict_,
             1.0
         )
@@ -360,7 +360,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     (
         dimensioned<scalar>::lookupOrAddToDict
         (
-            "lowerLimit",
+            "fKlowerLimit",
             this->coeffDict_,
             0.1
         )
@@ -401,11 +401,9 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     (
         IOobject
         (
-            IOobject::groupName("fOmega", U.group()),
+            "fOmega",
             this->runTime_.timeName(),
-            this->mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
+            this->mesh_
         ),
         fEpsilon_/fK_
     ),

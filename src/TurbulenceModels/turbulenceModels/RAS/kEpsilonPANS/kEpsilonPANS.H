@@ -87,8 +87,8 @@ Description
             sigmak      1.0;
             sigmaEps    1.3;
             fEpsilon    1.0;
-            upperLimit  1.0;
-            lowerLimit  0.1;
+            fKupperLimit  1.0;
+            fKlowerLimit  0.1;
         }
     \endverbatim
 

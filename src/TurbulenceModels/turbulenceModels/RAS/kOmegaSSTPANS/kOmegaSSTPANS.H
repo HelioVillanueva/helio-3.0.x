@@ -101,8 +101,8 @@ Description
             c1          10.0;
             F3          no;
             fEpsilon    1.0;
-            upperLimit  1.0;
-            lowerLimit  0.1;
+            fKupperLimit  1.0;
+            fKlowerLimit  0.1;
         }
     \endverbatim
 

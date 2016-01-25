@@ -179,7 +179,7 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
     (
         dimensioned<scalar>::lookupOrAddToDict
         (
-            "upperLimit",
+            "fKupperLimit",
             this->coeffDict_,
             1.0
         )
@@ -188,7 +188,7 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
     (
         dimensioned<scalar>::lookupOrAddToDict
         (
-            "lowerLimit",
+            "fKlowerLimit",
             this->coeffDict_,
             0.1
         )
