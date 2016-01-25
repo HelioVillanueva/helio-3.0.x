@@ -31,12 +31,12 @@ Description
     PANS implementation based on the Standard k-epsilon turbulence model for 
     incompressible and compressible flows including rapid distortion theory 
     (RDT) based compression term. The fK parameter, responsible for switching 
-    from RAS to DNS is calculated as [Girimaji,2005]:
+    from RAS to DNS is calculated based on [Girimaji,2005]:
 
-    fK_ = min( max( (1/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
-               (pow(kU_,3.0/2.0)/epsilonU_),2.0/3.0)) , loLimVec ), uLimVec );
+    fK_ = min( max( sqrt(Cmu_.value())*(pow(pow(cellVolume,1.0/3.0)/
+           (pow(kU_,1.5)/epsilonU_),2.0/3.0)) , loLimVec ), uLimVec );
 
-    bounded between loLim (DNS -> 0.0) and uLim (RAS -> 1.0). The ower the 
+    bounded between loLim (DNS -> 0.0) and uLim (RAS -> 1.0). The lower the 
     uLim, defined in turbulenceProperties dict, more scales are resolved.
 
 

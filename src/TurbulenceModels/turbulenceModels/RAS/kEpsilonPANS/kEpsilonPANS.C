@@ -48,12 +48,8 @@ template<class BasicTurbulenceModel>
 void kEpsilonPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {
     fK_ = min( max( sqrt(Cmu_.value())*(pow(pow(cellVolume,1.0/3.0)/
-           (pow(k_,1.5)/epsilon_),2.0/3.0)) , loLimVec ), uLimVec );
+           (pow(kU_,1.5)/epsilonU_),2.0/3.0)) , loLimVec ), uLimVec );
 
-
-    /*fK_ = min( max( (1.0/sqrt(Cmu_.value()))*(pow(pow(cellVolume,1.0/3.0)/
-               (pow(k_,1.5)/epsilon_),2.0/3.0)) , loLimVec ), uLimVec );
-*/
     C2U = C1_ + (fK_/fEpsilon_)*(C2_ - C1_);
 }
 
