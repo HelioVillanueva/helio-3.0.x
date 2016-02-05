@@ -43,8 +43,8 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
     (
         max
         (
-            sqrt(betaStar_.value())*(pow(pow(cellVolume,1.0/3.0)/
-           (sqrt(kU_)/(betaStar_.value()*omegaU_)),2.0/3.0)),
+            sqrt(betaStar_.value())*(pow(pow(cellVolume,1.0/3.0)*
+                (betaStar_.value()*omegaU_)/sqrt(kU_),2.0/3.0)),
             loLimVec
         ),
         uLimVec
@@ -86,14 +86,15 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
 template<class BasicTurbulenceModel>
 tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F2() const
 {
+
     tmp<volScalarField> arg2 = min
     (
         max
         (
-            (scalar(2)/betaStar_)*sqrt(kU_)/(omegaU_*y_),
-            scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omegaU_)
+            (scalar(2.0)/betaStar_)*sqrt(kU_)/(omegaU_*y_),
+            scalar(500.0)*(this->mu()/this->rho_)/(sqr(y_)*omegaU_)
         ),
-        scalar(100)
+        scalar(100.0)
     );
 
     return tanh(sqr(arg2));
@@ -130,7 +131,6 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctNut(const volScalarField& S2)
 {
     this->nut_ = a1_*kU_/max(a1_*omegaU_, b1_*F23()*sqrt(S2));
     this->nut_.correctBoundaryConditions();
-
     BasicTurbulenceModel::correctNut();
 }
 
@@ -382,7 +382,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             this->mesh_
         ),
         this->mesh_,
-        dimensionedScalar("zero", dimVolume, 0.0)
+        dimensionedScalar("zero", dimVolume, 0.1)
     ),
     fK_
     (
@@ -403,7 +403,9 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
         (
             "fOmega",
             this->runTime_.timeName(),
-            this->mesh_
+            this->mesh_ ,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
         ),
         fEpsilon_/fK_
     ),
@@ -439,11 +441,12 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             IOobject::groupName("kU", U.group()),
             this->runTime_.timeName(),
             this->mesh_,
-            IOobject::NO_READ,
+            IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        k_*fK_,
-        k_.boundaryField().types()
+        /*k_*fK_,
+        kU_.boundaryField().types(),*/
+        this->mesh_
     ),
     omegaU_
     (
@@ -452,18 +455,17 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             IOobject::groupName("omegaU", U.group()),
             this->runTime_.timeName(),
             this->mesh_,
-            IOobject::NO_READ,
+            IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        omega_*fOmega_,
-        omega_.boundaryField().types()
+        this->mesh_
     )
 {
     //Initialize variable cellVolume
     cellVolume.internalField() = this->mesh_.V();
 
-    bound(k_, this->kMin_);
-    bound(omega_, this->omegaMin_);
+    bound(kU_, this->kMin_);
+    bound(omegaU_, this->omegaMin_);
 
     if (type == typeName)
     {
@@ -605,6 +607,8 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     omega_ = omegaU_/fOmega_;
 
     correctNut(S2);
+    
+    //Info << "Recalculating fK with new kU and omegaU" << endl;
 
     // Recalculate fK with new kU and epsilonU
     correctPANSCoeffs();
