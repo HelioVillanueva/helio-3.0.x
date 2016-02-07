@@ -463,6 +463,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     cellVolume.internalField() = this->mesh_.V();
 
     kU_ = k_*fK_;
+    omegaU_ = omega_*fOmega_;
 
     bound(k_, this->kMin_);
     bound(omega_, this->omegaMin_);
