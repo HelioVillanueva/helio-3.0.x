@@ -462,6 +462,10 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     //Initialize variable cellVolume
     cellVolume.internalField() = this->mesh_.V();
 
+    kU_ = k_*fK_;
+
+    bound(k_, this->kMin_);
+    bound(omega_, this->omegaMin_);
     bound(kU_, this->kMin_);
     bound(omegaU_, this->omegaMin_);
 
@@ -603,6 +607,9 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     // Calculation of Turbulent kinetic energy and Frequency
     k_ = kU_/fK_;
     omega_ = omegaU_/fOmega_;
+
+    bound(k_, this->kMin_);
+    bound(omega_, this->omegaMin_);
 
     correctNut(S2);
     
