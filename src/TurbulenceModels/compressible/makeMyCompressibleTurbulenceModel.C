@@ -81,6 +81,9 @@ makeRASModel(kOmegaSSTSASnew);
 #include "kOmegaSSTPANS.H"
 makeRASModel(kOmegaSSTPANS);
 
+#include "kOmegaSSTgammaReTheta.H"
+makeRASModel(kOmegaSSTgammaReTheta);
+
 // -------------------------------------------------------------------------- //
 // LES models
 // -------------------------------------------------------------------------- //
