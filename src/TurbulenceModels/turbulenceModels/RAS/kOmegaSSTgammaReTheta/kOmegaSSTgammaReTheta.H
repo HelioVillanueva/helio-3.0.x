@@ -22,16 +22,32 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::RASModels::kOmegaSST
+    Foam::RASModels::kOmegaSSTgammaReTheta
 
 Group
     grpRASTurbulence
 
 Description
-    Implementation of the k-omega-SST turbulence model for
+    Implementation of the k-omega-SST gamma Re-Theta turbulence model for
     incompressible and compressible flows.
 
-    Turbulence model described in:
+	Transition Turbulence model described in:
+	\verbatim
+		Menter F, Langtry R, Vlker S, Huang P. (2005)
+		Transition modelling for general purpose CFD codes.
+		Engineering turbulence modelling and experiments 6.
+		Amsterdam: Elsevier Science B.V.; 2005. p. 31e48.
+	\endverbatim
+
+	Coefficients callibration for transitional model from
+	\verbatim
+		Malan P, Suluksna K, Juntasaro E. (2009).
+		Calibrating the gamma re theta transition model for commercial CFD
+		47th AIAA Aerospace Sciences Meeting.
+	\endverbatim
+
+
+    SST Turbulence model described in:
     \verbatim
         Menter, F. R. & Esch, T. (2001).
         Elements of Industrial Heat Transfer Prediction.
@@ -81,7 +97,7 @@ Description
         {
             alphaK1     0.85;
             alphaK2     1.0;
-            alphaOmega1 0.5;
+            alphaOmega1 0.5; CD 0.65
             alphaOmega2 0.856;
             beta1       0.075;
             beta2       0.0828;
@@ -105,7 +121,8 @@ SourceFiles
 
 #include "RASModel.H"
 #include "eddyViscosity.H"
-
+#include "findRoot.H"
+    
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -153,6 +170,11 @@ protected:
             dimensionedScalar b1_;
             dimensionedScalar c1_;
 
+            dimensionedScalar freeStreamU;
+            dimensionedScalar minvel;
+            dimensionedScalar mindis;
+            dimensionedScalar mintim;
+
             Switch F3_;
 
 
@@ -165,10 +187,14 @@ protected:
 
             volScalarField k_;
             volScalarField omega_;
+            volScalarField intermittency_;
+            volScalarField Ret_;
+            volScalarField Reo_;
 
 
     // Private Member Functions
 
+        tmp<volScalarField> findGrad(const volVectorField& Vel) const;
         tmp<volScalarField> F1(const volScalarField& CDkOmega) const;
         tmp<volScalarField> F2() const;
         tmp<volScalarField> F3() const;
@@ -279,6 +305,23 @@ public:
             );
         }
 
+        //- Return the effective diffusivity for Ret
+        tmp<volScalarField> DRetEff() const
+        {
+            return tmp<volScalarField>
+            (
+                new volScalarField("DRetEff", 2.0*(this->nut_+this->nu()))
+            );
+        }
+        //- Return the effective diffusivity for intermittency
+        tmp<volScalarField> DimEff() const
+        {
+            return tmp<volScalarField>
+            (
+                new volScalarField("DimEff", this->nut_+this->nu())
+            );
+        }
+
         //- Return the turbulence kinetic energy
         virtual tmp<volScalarField> k() const
         {
@@ -312,6 +355,7 @@ public:
 
         //- Solve the turbulence equations and correct the turbulence viscosity
         virtual void correct();
+
 };
 
 
