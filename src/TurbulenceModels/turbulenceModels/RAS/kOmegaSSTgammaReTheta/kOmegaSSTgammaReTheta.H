@@ -77,7 +77,7 @@ Description
 
     Note that this implementation is written in terms of alpha diffusion
     coefficients rather than the more traditional sigma (alpha = 1/sigma) so
-    that the blending can be applied to all coefficuients in a consistent
+    that the blending can be applied to all coefficients in a consistent
     manner.  The paper suggests that sigma is blended but this would not be
     consistent with the blending of the k-epsilon and k-omega models.
 
@@ -97,7 +97,7 @@ Description
         {
             alphaK1     0.85;
             alphaK2     1.0;
-            alphaOmega1 0.5; CD 0.65
+            alphaOmega1 0.5;
             alphaOmega2 0.856;
             beta1       0.075;
             beta2       0.0828;
