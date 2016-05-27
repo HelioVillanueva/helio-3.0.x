@@ -75,7 +75,7 @@ tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
                 (scalar(1)/betaStar_)*sqrt(kU_)/(omegaU_*y_),
                 scalar(500)*(this->mu()/this->rho_)/(sqr(y_)*omegaU_)
             ),
-            (4*alphaOmega2_*(fOmega_/fK_))*kU_/(CDkOmegaPlus*sqr(y_))
+            (4*alphaOmega2_*(fK_/fOmega_))*kU_/(CDkOmegaPlus*sqr(y_))
         ),
         scalar(10)
     );
@@ -541,7 +541,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
 
     volScalarField CDkOmega
     (
-        (2*alphaOmega2_*(fOmega_/fK_))*(fvc::grad(kU_) & fvc::grad(omegaU_))
+        (2*alphaOmega2_*(fK_/fOmega_))*(fvc::grad(kU_) & fvc::grad(omegaU_))
         /omegaU_
     );
 

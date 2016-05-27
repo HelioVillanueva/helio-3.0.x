@@ -290,7 +290,7 @@ public:
                 new volScalarField
                 (
                     "DkUEff",
-                    (fOmega_/fK_)*alphaK(F1)*this->nut_ + this->nu()
+                    (fK_/fOmega_)*alphaK(F1)*this->nut_ + this->nu()
                 )
             );
         }
@@ -303,7 +303,7 @@ public:
                 new volScalarField
                 (
                     "DomegaUEff",
-                    (fOmega_/fK_)*alphaOmega(F1)*this->nut_ + this->nu()
+                    (fK_/fOmega_)*alphaOmega(F1)*this->nut_ + this->nu()
                 )
             );
         }
