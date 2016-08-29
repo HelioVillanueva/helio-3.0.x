@@ -36,7 +36,7 @@ namespace RASModels
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
-template<class BasicTurbulenceModel>
+/*template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {
 	// Geometric parameter
@@ -55,7 +55,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
     (
         max
         (
-            sqrt(betaStar_.value())*(pow(delta/Lambda,2.0/3.0)),
+            sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
             loLimVec
         ),
         uLimVec
@@ -64,7 +64,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
     fOmega_ = fEpsilon_/fK_;
 
 }
-
+*/
 template<class BasicTurbulenceModel>
 tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
 (
@@ -629,8 +629,30 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     //Info << "Recalculating fK with new kU and omegaU" << endl;
 
     // Recalculate fK with new kU and epsilonU
-    correctPANSCoeffs();
+    //correctPANSCoeffs();
+	// Geometric parameter
+    volScalarField delta
+    (
+        pow(this->mesh_.V(),1.0/3.0)
+    );
+    
+    // Calculate the Taylor microscale
+    volScalarField Lambda
+    (
+        sqrt(kU_)/(betaStar_.value()*omegaU_)
+    );
 
+    fK_ = min
+    (
+        max
+        (
+            sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
+            loLimVec
+        ),
+        uLimVec
+    );
+
+    fOmega_ = fEpsilon_/fK_;
 }
 
 
