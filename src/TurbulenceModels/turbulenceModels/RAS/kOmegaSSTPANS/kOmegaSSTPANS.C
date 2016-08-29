@@ -385,7 +385,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
 
     y_(wallDist::New(this->mesh_).y()),
 
-    /*cellVolume
+    cellVolume
     (
         IOobject
         (
@@ -395,7 +395,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
         ),
         this->mesh_,
         dimensionedScalar("zero", dimVolume, 0.0)
-    ),*/
+    ),
     fK_
     (
         IOobject
@@ -472,7 +472,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     )
 {
     //Initialize variable cellVolume
-    //cellVolume.internalField() = this->mesh_.V();
+    cellVolume.internalField() = this->mesh_.V();
 
     kU_ = k_*fK_;
     omegaU_ = omega_*fOmega_;
@@ -630,7 +630,11 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
 
     // Recalculate fK with new kU and epsilonU
     //correctPANSCoeffs();
-
+	// Geometric parameter
+    volScalarField delta
+    (
+        pow(cellVolume,1.0/3.0)
+    );
     
     // Calculate the Taylor microscale
     volScalarField Lambda
@@ -642,8 +646,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     (
         max
         (
-            sqrt(betaStar_.value())*pow(pow(this->mesh_.V(),1.0/3.0)/
-            	Lambda,2.0/3.0),
+            sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
             loLimVec
         ),
         uLimVec
