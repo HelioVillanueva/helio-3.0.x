@@ -181,7 +181,7 @@ protected:
             //  which is for near-wall cells only
             const volScalarField& y_;
 
-            volScalarField cellVolume;
+            volScalarField delta;
             volScalarField fK_;
             volScalarField fOmega_;
             volScalarField k_;
@@ -234,7 +234,7 @@ protected:
     // Protected Member Functions
 
         virtual void correctNut();
-        //virtual void correctPANSCoeffs();
+        virtual void correctPANSCoeffs();
         virtual tmp<fvScalarMatrix> kSource() const;
         virtual tmp<fvScalarMatrix> omegaSource() const;
         virtual tmp<fvScalarMatrix> Qsas

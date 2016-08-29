@@ -36,15 +36,9 @@ namespace RASModels
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
-/*template<class BasicTurbulenceModel>
+template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
-{
-	// Geometric parameter
-    volScalarField delta
-    (
-        pow(this->mesh_.V(),1.0/3.0)
-    );
-    
+{    
     // Calculate the Taylor microscale
     volScalarField Lambda
     (
@@ -64,7 +58,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
     fOmega_ = fEpsilon_/fK_;
 
 }
-*/
+
 template<class BasicTurbulenceModel>
 tmp<volScalarField> kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS::F1
 (
@@ -385,11 +379,11 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
 
     y_(wallDist::New(this->mesh_).y()),
 
-    cellVolume
+    delta
     (
         IOobject
         (
-            "cellVolume",
+            "delta",
             this->runTime_.timeName(),
             this->mesh_
         ),
@@ -471,8 +465,8 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
         this->mesh_
     )
 {
-    //Initialize variable cellVolume
-    cellVolume.internalField() = this->mesh_.V();
+    //Initialize variable delta
+    delta.internalField() = pow(this->mesh_.V(),1.0/3.0);
 
     kU_ = k_*fK_;
     omegaU_ = omega_*fOmega_;
@@ -629,30 +623,7 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
     //Info << "Recalculating fK with new kU and omegaU" << endl;
 
     // Recalculate fK with new kU and epsilonU
-    //correctPANSCoeffs();
-	// Geometric parameter
-    volScalarField delta
-    (
-        pow(cellVolume,1.0/3.0)
-    );
-    
-    // Calculate the Taylor microscale
-    volScalarField Lambda
-    (
-        sqrt(kU_)/(betaStar_.value()*omegaU_)
-    );
-
-    fK_ = min
-    (
-        max
-        (
-            sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
-            loLimVec
-        ),
-        uLimVec
-    );
-
-    fOmega_ = fEpsilon_/fK_;
+    correctPANSCoeffs();
 }
 
 
