@@ -185,8 +185,8 @@ protected:
             volScalarField fK_;
             volScalarField fOmega_;
             volScalarField k_;
-            volScalarField kU_;
             volScalarField omega_;
+            volScalarField kU_;
             volScalarField omegaU_;
 
 

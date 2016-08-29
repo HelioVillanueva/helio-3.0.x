@@ -336,8 +336,6 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
         )
     ),
 
-    y_(wallDist::New(this->mesh_).y()),
-
     fEpsilon_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -373,6 +371,9 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     (
         dimensionedScalar("loLimVec", loLim_)
     ),
+    
+    y_(wallDist::New(this->mesh_).y()),
+
     cellVolume
     (
         IOobject
