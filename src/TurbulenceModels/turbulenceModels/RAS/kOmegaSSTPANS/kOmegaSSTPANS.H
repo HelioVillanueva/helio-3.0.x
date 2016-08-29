@@ -170,8 +170,6 @@ protected:
             dimensionedScalar fEpsilon_;
             dimensionedScalar uLim_;
             dimensionedScalar loLim_;
-            dimensionedScalar uLimVec;
-            dimensionedScalar loLimVec;
 
 
         // Fields

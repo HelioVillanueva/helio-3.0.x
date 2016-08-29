@@ -141,12 +141,10 @@ protected:
             dimensionedScalar fEpsilon_;
             dimensionedScalar uLim_;
             dimensionedScalar loLim_;
-            dimensionedScalar uLimVec;
-            dimensionedScalar loLimVec;
 
         // Fields
 
-            volScalarField cellVolume;
+            volScalarField delta;
             volScalarField fK_;
             volScalarField C2U;
             volScalarField k_;

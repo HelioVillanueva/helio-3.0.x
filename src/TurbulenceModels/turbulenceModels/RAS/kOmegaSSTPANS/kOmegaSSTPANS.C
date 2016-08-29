@@ -39,7 +39,7 @@ namespace RASModels
 template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {    
-    // Calculate the Taylor microscale
+    // Calculate Taylor microscale
     volScalarField Lambda
     (
         sqrt(kU_)/(betaStar_.value()*omegaU_)
@@ -47,12 +47,8 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 
     fK_ = min
     (
-        max
-        (
-            sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
-            loLim_
-        ),
-        uLim_
+    	max(sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),loLim_),
+    	uLim_
     );
 
     fOmega_ = fEpsilon_/fK_;
@@ -368,17 +364,8 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             0.1
         )
     ),
-    uLimVec
-    (
-        dimensionedScalar("uLimVec", uLim_)
-    ),
-    loLimVec
-    (
-        dimensionedScalar("loLimVec", loLim_)
-    ),
 
     y_(wallDist::New(this->mesh_).y()),
-
     delta
     (
         IOobject

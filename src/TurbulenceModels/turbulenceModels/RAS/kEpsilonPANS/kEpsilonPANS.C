@@ -47,8 +47,17 @@ void kEpsilonPANS<BasicTurbulenceModel>::correctNut()
 template<class BasicTurbulenceModel>
 void kEpsilonPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {
-    fK_ = min( max( sqrt(Cmu_.value())*(pow(pow(cellVolume,1.0/3.0)/
-           (pow(k_,1.5)/epsilon_),2.0/3.0)) , loLimVec ), uLimVec );
+    // Calculate the Taylor microscale
+    volScalarField Lambda
+    (
+        pow(k_,1.5)/epsilon_
+    );
+
+    fK_ = min
+    (
+        max(sqrt(Cmu_.value())*(pow(delta/Lambda,2.0/3.0)),loLim_),
+        uLim_
+    );
 
     C2U = C1_ + (fK_/fEpsilon_)*(C2_ - C1_);
 }
@@ -193,24 +202,16 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             0.1
         )
     ),
-    uLimVec
-    (
-        dimensionedScalar("uLimVec", uLim_)
-    ),
-    loLimVec
-    (
-        dimensionedScalar("loLimVec", loLim_)
-    ),
-    cellVolume
+    delta
     (
         IOobject
         (
-            "cellVolume",
+            "delta",
             this->runTime_.timeName(),
             this->mesh_
         ),
         this->mesh_,
-        dimensionedScalar("zero", dimVolume, 0.0)
+        dimensionedScalar("zero", pow(dimVolume,1.0/3.0), 0.0)
     ),
     fK_
     (
@@ -284,8 +285,8 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
         this->mesh_
     )
 {
-    //Initialize variable cellVolume
-    cellVolume.internalField() = this->mesh_.V();
+    //Initialize variable delta
+    delta.internalField() = pow(this->mesh_.V(),1.0/3.0);
 
     kU_ = k_*fK_;
     epsilonU_ = epsilon_*fEpsilon_;
