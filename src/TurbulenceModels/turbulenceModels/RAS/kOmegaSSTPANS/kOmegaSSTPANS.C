@@ -394,7 +394,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             this->mesh_
         ),
         this->mesh_,
-        dimensionedScalar("zero", dimVolume, 0.0)
+        dimensionedScalar("zero", pow(dimVolume,1.0/3.0), 0.0)
     ),
     fK_
     (
