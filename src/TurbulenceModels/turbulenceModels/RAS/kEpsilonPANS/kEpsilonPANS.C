@@ -353,7 +353,7 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
     tgradU.clear();
 
     // Update epsilon and G at the wall
-    //epsilonU_.boundaryField().updateCoeffs();
+    epsilonU_.boundaryField().updateCoeffs();
 
     // Unresolved Dissipation equation
     tmp<fvScalarMatrix> epsUEqn
@@ -369,7 +369,7 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
     );
 
     epsUEqn().relax();
-    //epsUEqn().boundaryManipulate(epsilonU_.boundaryField());
+    epsUEqn().boundaryManipulate(epsilonU_.boundaryField());
     solve(epsUEqn);
     bound(epsilonU_, fEpsilon_*this->epsilonMin_);
 
