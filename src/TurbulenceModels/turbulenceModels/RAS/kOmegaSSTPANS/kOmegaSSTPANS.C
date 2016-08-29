@@ -50,9 +50,9 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
         max
         (
             sqrt(betaStar_.value())*pow(delta/Lambda,2.0/3.0),
-            loLimVec
+            loLim_
         ),
-        uLimVec
+        uLim_
     );
 
     fOmega_ = fEpsilon_/fK_;
