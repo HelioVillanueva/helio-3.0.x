@@ -258,7 +258,8 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_
+        k_*fK_,
+        k_.boundaryField().types()
     ),
     epsilon_
     (
@@ -282,7 +283,8 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_
+        epsilon_*fEpsilon_,
+        epsilon_.boundaryField().types()
     )
 {
     //Initialize variable delta
@@ -395,7 +397,9 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
 
     // Calculation of Turbulent kinetic energy and Dissipation rate
     k_ = kU_/fK_;
+    k_.correctBoundaryConditions();
     epsilon_ = epsilonU_/fEpsilon_;
+    epsilon_.correctBoundaryConditions();
 
     bound(k_, this->kMin_);
     bound(epsilon_, this->epsilonMin_);

@@ -366,6 +366,7 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
     ),
 
     y_(wallDist::New(this->mesh_).y()),
+    
     delta
     (
         IOobject
@@ -434,10 +435,11 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             IOobject::groupName("kU", U.group()),
             this->runTime_.timeName(),
             this->mesh_,
-            IOobject::MUST_READ,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_
+        k_*fK_,
+        k_.boundaryField().types()
     ),
     omegaU_
     (
@@ -449,19 +451,17 @@ kOmegaSSTPANS<BasicTurbulenceModel>::kOmegaSSTPANS
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
-        this->mesh_
+        omega_*fOmega_,
+        omega_.boundaryField().types()
     )
 {
     //Initialize variable delta
     delta.internalField() = pow(this->mesh_.V(),1.0/3.0);
 
-    kU_ = k_*fK_;
-    omegaU_ = omega_*fOmega_;
-
     bound(k_, this->kMin_);
     bound(omega_, this->omegaMin_);
-    bound(kU_, this->kMin_);
-    bound(omegaU_, this->omegaMin_);
+    bound(kU_, min(fK_)*this->kMin_);
+    bound(omegaU_, min(fOmega_)*this->omegaMin_);
 
     if (type == typeName)
     {
@@ -600,7 +600,9 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correct()
 
     // Calculation of Turbulent kinetic energy and Frequency
     k_ = kU_/fK_;
+    k_.correctBoundaryConditions();
     omega_ = omegaU_/fOmega_;
+    omega_.correctBoundaryConditions();
 
     bound(k_, this->kMin_);
     bound(omega_, this->omegaMin_);
