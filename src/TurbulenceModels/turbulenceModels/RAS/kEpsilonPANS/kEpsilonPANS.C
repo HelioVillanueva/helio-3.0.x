@@ -290,13 +290,10 @@ kEpsilonPANS<BasicTurbulenceModel>::kEpsilonPANS
     //Initialize variable delta
     delta.internalField() = pow(this->mesh_.V(),1.0/3.0);
 
-    kU_ = k_*fK_;
-    epsilonU_ = epsilon_*fEpsilon_;
-
     bound(k_, this->kMin_);
-    bound(kU_, this->kMin_);
     bound(epsilon_, this->epsilonMin_);
-    bound(epsilonU_, this->epsilonMin_);
+    bound(kU_, min(fK_)*this->kMin_);
+    bound(epsilonU_, fEpsilon_*this->epsilonMin_);
 
     if (type == typeName)
     {
