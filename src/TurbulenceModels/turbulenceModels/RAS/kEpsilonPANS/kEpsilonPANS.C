@@ -369,7 +369,7 @@ void kEpsilonPANS<BasicTurbulenceModel>::correct()
     );
 
     epsUEqn().relax();
-    epsUEqn().boundaryManipulate(epsilonU_.boundaryField());
+    //epsUEqn().boundaryManipulate(epsilonU_.boundaryField());
     solve(epsUEqn);
     bound(epsilonU_, fEpsilon_*this->epsilonMin_);
 
