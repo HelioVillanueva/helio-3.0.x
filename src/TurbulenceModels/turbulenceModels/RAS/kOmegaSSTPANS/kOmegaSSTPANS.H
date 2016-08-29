@@ -181,7 +181,7 @@ protected:
             //  which is for near-wall cells only
             const volScalarField& y_;
 
-            //volScalarField cellVolume;
+            volScalarField cellVolume;
             volScalarField fK_;
             volScalarField fOmega_;
             volScalarField k_;
