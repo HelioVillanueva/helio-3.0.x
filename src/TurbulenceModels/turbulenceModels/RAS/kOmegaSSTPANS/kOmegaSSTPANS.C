@@ -40,13 +40,13 @@ template<class BasicTurbulenceModel>
 void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
 {
 	// Geometric parameter
-    volScalarField::Internal delta
+    volScalarField delta
     (
         pow(this->mesh_.V(),1.0/3.0)
     );
     
     // Calculate the Taylor microscale
-    volScalarField::Internal Lambda
+    volScalarField Lambda
     (
         sqrt(kU_)/(betaStar_.value()*omegaU_)
     );
