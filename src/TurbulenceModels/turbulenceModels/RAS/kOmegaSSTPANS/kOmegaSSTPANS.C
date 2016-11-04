@@ -42,7 +42,16 @@ void kOmegaSSTPANS<BasicTurbulenceModel>::correctPANSCoeffs()
     // Calculate Taylor microscale
     volScalarField Lambda
     (
-        sqrt(kU_)/(betaStar_.value()*omegaU_)
+        max
+        (
+            sqrt(kU_)/(betaStar_.value()*omegaU_),
+            dimensionedScalar
+            (
+                "1.0e-10",
+                sqrt(kU_.dimensions())/omegaU_.dimensions(),
+                1.0e-10
+            )
+        )
     );
 
     fK_ = min
